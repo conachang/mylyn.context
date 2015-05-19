@@ -23,6 +23,7 @@ import org.eclipse.mylyn.context.core.IInteractionContext;
 import org.eclipse.mylyn.context.core.IInteractionContextScaling;
 import org.eclipse.mylyn.context.core.IInteractionElement;
 import org.eclipse.mylyn.monitor.core.InteractionEvent;
+import org.eclipse.mylyn.monitor.core.InteractionEvent.Kind;
 
 /**
  * @author Mik Kersten
@@ -45,6 +46,8 @@ public class InteractionContext implements IInteractionContext {
 	private InteractionContextElement activeNode;
 
 	private InteractionEvent lastEdgeEvent;
+
+	private InteractionEvent lastEditEvent;
 
 	private InteractionContextElement lastEdgeNode;
 
@@ -131,8 +134,13 @@ public class InteractionContext implements IInteractionContext {
 			}
 		}
 		DegreeOfInterest doi = (DegreeOfInterest) node.getInterest();
-
-		doi.addEvent(event);
+		if (event.getKind() == Kind.EDIT) {
+			boolean toNewDuration = lastEditEvent == null
+					|| !lastEditEvent.getStructureHandle().equals(event.getStructureHandle());
+			doi.addEditEvent(event, toNewDuration);
+		} else {
+			doi.addEvent(event);
+		}
 		if (doi.isLandmark()) {
 			landmarkMap.put(node.getHandleIdentifier(), node);
 		} else {
@@ -142,6 +150,9 @@ public class InteractionContext implements IInteractionContext {
 			lastEdgeEvent = event;
 			lastEdgeNode = node;
 			activeNode = node;
+		}
+		if (event.getKind() == Kind.EDIT) {
+			lastEditEvent = event;
 		}
 		return node;
 	}
@@ -275,7 +286,7 @@ public class InteractionContext implements IInteractionContext {
 
 	/**
 	 * This method is only used for asynchronous saving of task contexts
-	 * 
+	 *
 	 * @return a context with a copy of the collapsed interaction history. All other fields are not set.
 	 */
 	synchronized IInteractionContext createCollapsedWritableCopy() {

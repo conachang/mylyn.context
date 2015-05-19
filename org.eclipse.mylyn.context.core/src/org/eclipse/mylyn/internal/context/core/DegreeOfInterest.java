@@ -19,6 +19,7 @@ import java.util.Map;
 import org.eclipse.mylyn.context.core.IDegreeOfInterest;
 import org.eclipse.mylyn.context.core.IInteractionContextScaling;
 import org.eclipse.mylyn.monitor.core.InteractionEvent;
+import org.eclipse.mylyn.monitor.core.InteractionEvent.Kind;
 
 /**
  * @author Mik Kersten
@@ -84,6 +85,22 @@ public class DegreeOfInterest implements IDegreeOfInterest {
 			collapsedEvents.put(event.getKind(), event);
 		}
 
+		updateEventState(event);
+	}
+
+	void addEditEvent(InteractionEvent event, boolean toNewDuration) {
+		assert (event.getKind() == Kind.EDIT);
+		events.add(event);
+		InteractionEvent last = collapsedEvents.get(event.getKind());
+		AggregateInteractionEvent aggregateEvent;
+		if (last == null) {
+			aggregateEvent = AggregateInteractionEvent.getAggregatedEvent(event, eventCountOnCreation);
+		} else {
+			AggregateInteractionEvent aggregateLastEvent = (AggregateInteractionEvent) last;
+			aggregateEvent = new AggregateInteractionEvent(aggregateLastEvent, event, eventCountOnCreation,
+					toNewDuration);
+		}
+		collapsedEvents.put(event.getKind(), aggregateEvent);
 		updateEventState(event);
 	}
 
@@ -180,7 +197,7 @@ public class DegreeOfInterest implements IDegreeOfInterest {
 	// stream.defaultWriteObject();
 	// stream.writeObject(events);
 	// }
-	//    
+	//
 	// @SuppressWarnings(value="unchecked")
 	// private void readObject(ObjectInputStream stream) throws IOException,
 	// ClassNotFoundException {
