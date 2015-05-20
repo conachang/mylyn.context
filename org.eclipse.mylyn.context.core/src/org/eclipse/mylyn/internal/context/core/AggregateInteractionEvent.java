@@ -36,7 +36,7 @@ public class AggregateInteractionEvent extends InteractionEvent {
 		List<Duration> durationList = new ArrayList<Duration>();
 		durationList.add(duration);
 		return new AggregateInteractionEvent(event.getKind(), event.getStructureKind(), event.getStructureHandle(),
-				event.getOriginId(), event.getNavigation(), event.getDelta(), event.getInterestContribution(),
+				event.getOriginId(), event.getNavigation(), "null", event.getInterestContribution(), //$NON-NLS-1$
 				event.getDate(), event.getEndDate(), 1, eventCountOnCreation, durationList);
 	}
 
@@ -62,7 +62,7 @@ public class AggregateInteractionEvent extends InteractionEvent {
 			boolean toNewDuration) {
 		this(event.getKind(), event.getStructureKind(), event.getStructureHandle(), event.getOriginId(),
 				event.getNavigation(), event.getDelta(), last.getInterestContribution()
-						+ event.getInterestContribution(), last.getDate(), event.getEndDate(),
+				+ event.getInterestContribution(), last.getDate(), event.getEndDate(),
 				last.getNumCollapsedEvents() + 1, eventCountOnCreation, getUpdatedDurationList(last.getDurationList(),
 						event, toNewDuration));
 
@@ -74,18 +74,10 @@ public class AggregateInteractionEvent extends InteractionEvent {
 	public AggregateInteractionEvent(Kind kind, String structureKind, String handle, String originId,
 			String navigatedRelation, String delta, float interestContribution, int numCollapsedEvents,
 			int eventCountOnCreation) {
-		this(kind, structureKind, handle, originId, navigatedRelation, delta, interestContribution, numCollapsedEvents,
-				eventCountOnCreation, null);
-
-	}
-
-	public AggregateInteractionEvent(Kind kind, String structureKind, String handle, String originId,
-			String navigatedRelation, String delta, float interestContribution, int numCollapsedEvents,
-			int eventCountOnCreation, List<Duration> durationList) {
 		super(kind, structureKind, handle, originId, navigatedRelation, delta, interestContribution);
 		this.numCollapsedEvents = numCollapsedEvents;
 		this.eventCountOnCreation = eventCountOnCreation;
-		this.durationList = durationList;
+		this.durationList = null;
 	}
 
 	/**
