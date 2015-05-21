@@ -151,7 +151,7 @@ public class InteractionContext implements IInteractionContext {
 			lastEdgeNode = node;
 			activeNode = node;
 		}
-		if (event.getKind() == Kind.EDIT) {
+		if (event.getKind() == Kind.EDIT && !(event instanceof AggregateInteractionEvent)) {//Events from XML file are ignored.
 			lastEditEvent = event;
 		}
 		return node;
@@ -255,6 +255,7 @@ public class InteractionContext implements IInteractionContext {
 		numUserEvents = 0;
 		lastEdgeEvent = null;
 		lastEdgeNode = null;
+		lastEditEvent = null;
 	}
 
 	public synchronized int getUserEventCount() {

@@ -213,6 +213,13 @@ public class SaxContextWriter implements IInteractionContextWriter {
 			ieAttributes.addAttribute("", InteractionContextExternalizer.ATR_CREATION_COUNT, //$NON-NLS-1$
 					InteractionContextExternalizer.ATR_CREATION_COUNT, "", //$NON-NLS-1$
 					Integer.toString(((AggregateInteractionEvent) ie).getEventCountOnCreation()));
+
+			String durationListXMLString = ((AggregateInteractionEvent) ie).getDurationListXMLString();
+			if (durationListXMLString != null) {
+				ieAttributes.addAttribute("", InteractionContextExternalizer.ATR_DURATION_LIST, //$NON-NLS-1$
+						InteractionContextExternalizer.ATR_DURATION_LIST, "", //$NON-NLS-1$
+						durationListXMLString);
+			}
 		}
 		return ieAttributes;
 	}

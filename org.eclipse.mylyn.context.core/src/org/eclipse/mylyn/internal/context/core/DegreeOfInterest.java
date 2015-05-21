@@ -97,8 +97,8 @@ public class DegreeOfInterest implements IDegreeOfInterest {
 			aggregateEvent = AggregateInteractionEvent.getAggregatedEvent(event, eventCountOnCreation);
 		} else {
 			AggregateInteractionEvent aggregateLastEvent = (AggregateInteractionEvent) last;
-			aggregateEvent = new AggregateInteractionEvent(aggregateLastEvent, event, eventCountOnCreation,
-					toNewDuration);
+			aggregateEvent = AggregateInteractionEvent.appendOneEditEvent(aggregateLastEvent, event,
+					eventCountOnCreation, toNewDuration);
 		}
 		collapsedEvents.put(event.getKind(), aggregateEvent);
 		updateEventState(event);

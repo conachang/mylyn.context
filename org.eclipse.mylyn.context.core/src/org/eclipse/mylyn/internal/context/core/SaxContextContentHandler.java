@@ -15,12 +15,14 @@ package org.eclipse.mylyn.internal.context.core;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.mylyn.commons.core.StatusHandler;
 import org.eclipse.mylyn.context.core.IInteractionContextScaling;
+import org.eclipse.mylyn.internal.context.core.AggregateInteractionEvent.Duration;
 import org.eclipse.mylyn.monitor.core.InteractionEvent;
 import org.eclipse.mylyn.monitor.core.InteractionEvent.Kind;
 import org.xml.sax.Attributes;
@@ -120,15 +122,20 @@ public class SaxContextContentHandler extends DefaultHandler {
 		Date dStartDate = dateFormat.parse(startDate);
 		Date dEndDate = dateFormat.parse(endDate);
 		float iInterest = Float.parseFloat(interest);
+		String durationListString = attributes.getValue(InteractionContextExternalizer.ATR_DURATION_LIST);
+		List<Duration> durationList = AggregateInteractionEvent.getListOfDurationFromXMLString(durationListString);
 
 		InteractionEvent ie = null;
 		if (numEventsString == null || eventCountOnCreationString == null) {
 			// if we don't have the values for the collapsed event, it must be one that is uncollapsed
 			ie = new InteractionEvent(Kind.fromString(kind), structureKind, structureHandle, originId, navigation,
 					delta, iInterest, dStartDate, dEndDate);
-		} else {
+		} else if (durationList == null) {
 			ie = new AggregateInteractionEvent(Kind.fromString(kind), structureKind, structureHandle, originId,
 					navigation, delta, iInterest, dStartDate, dEndDate, numEvents, eventCountOnCreation);
+		} else {
+			ie = new AggregateInteractionEvent(Kind.fromString(kind), structureKind, structureHandle, originId,
+					navigation, delta, iInterest, dStartDate, dEndDate, numEvents, eventCountOnCreation, durationList);
 		}
 		return ie;
 	}

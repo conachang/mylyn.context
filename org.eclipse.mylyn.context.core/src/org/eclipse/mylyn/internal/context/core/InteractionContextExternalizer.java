@@ -68,6 +68,8 @@ public class InteractionContextExternalizer {
 
 	public static final String ATR_END_DATE = "EndDate"; //$NON-NLS-1$
 
+	public static final String ATR_DURATION_LIST = "DurationList"; //$NON-NLS-1$
+
 	public static final String ATR_ID = "Id"; //$NON-NLS-1$
 
 	public static final String ATR_VERSION = "Version"; //$NON-NLS-1$

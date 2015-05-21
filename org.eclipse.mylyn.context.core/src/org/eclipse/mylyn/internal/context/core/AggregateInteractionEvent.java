@@ -11,9 +11,14 @@
 
 package org.eclipse.mylyn.internal.context.core;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 
 import org.eclipse.mylyn.monitor.core.InteractionEvent;
 
@@ -29,7 +34,14 @@ public class AggregateInteractionEvent extends InteractionEvent {
 
 	private final List<Duration> durationList;
 
-	static final String DELTA_UPDATED = "updated"; //$NON-NLS-1$
+	private static final String DELTA_UPDATED = "updated"; //$NON-NLS-1$
+
+	private static final String XMLSTRING_LIST_DELIMITER = ","; //$NON-NLS-1$
+
+	private static final String XMLSTRING_DURATION_DELIMITER = "/"; //$NON-NLS-1$
+
+	private static final SimpleDateFormat dateFormat = new SimpleDateFormat(
+			InteractionContextExternalizer.DATE_FORMAT_STRING, Locale.ENGLISH);
 
 	public static AggregateInteractionEvent getAggregatedEvent(InteractionEvent event, int eventCountOnCreation) {
 		Duration duration = new Duration(event.getDate(), event.getDate(), event.getDelta().equals(DELTA_UPDATED));
@@ -58,14 +70,13 @@ public class AggregateInteractionEvent extends InteractionEvent {
 		return durationList;
 	}
 
-	public AggregateInteractionEvent(AggregateInteractionEvent last, InteractionEvent event, int eventCountOnCreation,
-			boolean toNewDuration) {
-		this(event.getKind(), event.getStructureKind(), event.getStructureHandle(), event.getOriginId(),
-				event.getNavigation(), event.getDelta(), last.getInterestContribution()
+	public static AggregateInteractionEvent appendOneEditEvent(AggregateInteractionEvent last, InteractionEvent event,
+			int eventCountOnCreation, boolean toNewDuration) {
+		List<Duration> newDuration = getUpdatedDurationList(last.getDurationList(), event, toNewDuration);
+		return new AggregateInteractionEvent(event.getKind(), event.getStructureKind(), event.getStructureHandle(),
+				event.getOriginId(), event.getNavigation(), "null", last.getInterestContribution() //$NON-NLS-1$
 				+ event.getInterestContribution(), last.getDate(), event.getEndDate(),
-				last.getNumCollapsedEvents() + 1, eventCountOnCreation, getUpdatedDurationList(last.getDurationList(),
-						event, toNewDuration));
-
+				last.getNumCollapsedEvents() + 1, eventCountOnCreation, newDuration);
 	}
 
 	/**
@@ -118,6 +129,35 @@ public class AggregateInteractionEvent extends InteractionEvent {
 		return durationList != null ? new ArrayList<Duration>(durationList) : null;
 	}
 
+	public String getDurationListXMLString() {
+		if (durationList == null) {
+			return null;
+		}
+		return durationList.toString();
+	}
+
+	public static List<Duration> getListOfDurationFromXMLString(String xmlString) {
+		if (xmlString == null || xmlString.charAt(0) != '[' || xmlString.charAt(xmlString.length() - 1) != ']') {
+			return null;
+		}
+		StringTokenizer tokenizer = new StringTokenizer(xmlString.substring(1, xmlString.length() - 2),
+				XMLSTRING_LIST_DELIMITER);
+		List<Duration> durationList = new ArrayList<Duration>();
+		try {
+			while (tokenizer.hasMoreTokens()) {
+				durationList.add(new Duration(tokenizer.nextToken()));
+			}
+		} catch (NoSuchElementException e) {
+			e.printStackTrace();
+			return null;
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return durationList;
+
+	}
+
 	static class Duration {
 		final Date begin;
 
@@ -131,6 +171,18 @@ public class AggregateInteractionEvent extends InteractionEvent {
 			this.isUpdated = isUpdated;
 		}
 
+		Duration(String xmlString) throws ParseException, NoSuchElementException {
+			StringTokenizer tokenizer = new StringTokenizer(xmlString, XMLSTRING_DURATION_DELIMITER);
+			this.begin = dateFormat.parse(tokenizer.nextToken());
+			this.end = dateFormat.parse(tokenizer.nextToken());
+			this.isUpdated = Boolean.valueOf(tokenizer.nextToken());
+		}
+
+		@Override
+		public String toString() {
+			return dateFormat.format(begin) + XMLSTRING_DURATION_DELIMITER + dateFormat.format(end)
+					+ XMLSTRING_DURATION_DELIMITER + isUpdated;
+		}
 	}
 
 }
