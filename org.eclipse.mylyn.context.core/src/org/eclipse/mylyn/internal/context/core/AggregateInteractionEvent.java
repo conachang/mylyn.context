@@ -34,7 +34,9 @@ public class AggregateInteractionEvent extends InteractionEvent {
 
 	private final List<Duration> durationList;
 
-	private static final String DELTA_UPDATED = "updated"; //$NON-NLS-1$
+	public static final String DELTA_MODIFIED = "modified"; //$NON-NLS-1$
+
+	public static final String DELTA_REFERRED = "referred"; //$NON-NLS-1$
 
 	private static final String XMLSTRING_LIST_DELIMITER = ","; //$NON-NLS-1$
 
@@ -44,7 +46,7 @@ public class AggregateInteractionEvent extends InteractionEvent {
 			InteractionContextExternalizer.DATE_FORMAT_STRING, Locale.ENGLISH);
 
 	public static AggregateInteractionEvent getAggregatedEvent(InteractionEvent event, int eventCountOnCreation) {
-		Duration duration = new Duration(event.getDate(), event.getDate(), event.getDelta().equals(DELTA_UPDATED));
+		Duration duration = new Duration(event.getDate(), event.getDate(), event.getDelta().equals(DELTA_MODIFIED));
 		List<Duration> durationList = new ArrayList<Duration>();
 		durationList.add(duration);
 		return new AggregateInteractionEvent(event.getKind(), event.getStructureKind(), event.getStructureHandle(),
@@ -56,19 +58,19 @@ public class AggregateInteractionEvent extends InteractionEvent {
 			boolean toNewDuration) {
 		if (_durationList == null) {
 			List<Duration> durationList = new ArrayList<Duration>();
-			Duration newDuration = new Duration(e.getDate(), e.getEndDate(), e.getDelta().equals(DELTA_UPDATED));
+			Duration newDuration = new Duration(e.getDate(), e.getEndDate(), e.getDelta().equals(DELTA_MODIFIED));
 			durationList.add(newDuration);
 			return durationList;
 		}
 
 		List<Duration> durationList = new ArrayList<Duration>(_durationList);
 		if (toNewDuration) {
-			Duration newDuration = new Duration(e.getDate(), e.getEndDate(), e.getDelta().equals(DELTA_UPDATED));
+			Duration newDuration = new Duration(e.getDate(), e.getEndDate(), e.getDelta().equals(DELTA_MODIFIED));
 			durationList.add(newDuration);
 		} else {
 			Duration lastDuration = durationList.get(durationList.size() - 1);
-			Duration updatedDuration = new Duration(lastDuration.begin, e.getEndDate(), lastDuration.isUpdated
-					|| e.getDelta().equals(DELTA_UPDATED));
+			Duration updatedDuration = new Duration(lastDuration.begin, e.getEndDate(), lastDuration.isModified
+					|| e.getDelta().equals(DELTA_MODIFIED));
 			durationList.set(durationList.size() - 1, updatedDuration);
 		}
 		return durationList;
@@ -167,25 +169,25 @@ public class AggregateInteractionEvent extends InteractionEvent {
 
 		final Date end;
 
-		final boolean isUpdated;
+		final boolean isModified;
 
-		Duration(Date begin, Date end, boolean isUpdated) {
+		Duration(Date begin, Date end, boolean isModified) {
 			this.begin = begin;
 			this.end = end;
-			this.isUpdated = isUpdated;
+			this.isModified = isModified;
 		}
 
 		Duration(String xmlString) throws ParseException, NoSuchElementException {
 			StringTokenizer tokenizer = new StringTokenizer(xmlString, XMLSTRING_DURATION_DELIMITER);
 			this.begin = dateFormat.parse(tokenizer.nextToken());
 			this.end = dateFormat.parse(tokenizer.nextToken());
-			this.isUpdated = Boolean.valueOf(tokenizer.nextToken());
+			this.isModified = tokenizer.nextToken().equals(DELTA_MODIFIED);
 		}
 
 		@Override
 		public String toString() {
 			return dateFormat.format(begin) + XMLSTRING_DURATION_DELIMITER + dateFormat.format(end)
-					+ XMLSTRING_DURATION_DELIMITER + isUpdated;
+					+ XMLSTRING_DURATION_DELIMITER + (isModified ? DELTA_MODIFIED : DELTA_REFERRED);
 		}
 	}
 
