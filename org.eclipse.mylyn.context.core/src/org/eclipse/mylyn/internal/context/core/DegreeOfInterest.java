@@ -93,9 +93,13 @@ public class DegreeOfInterest implements IDegreeOfInterest {
 		events.add(event);
 		InteractionEvent last = collapsedEvents.get(event.getKind());
 		AggregateInteractionEvent aggregateEvent;
-		if (last == null) {
+		if (event instanceof AggregateInteractionEvent) {//If event is from context xml file.
+			assert (last == null);
+			aggregateEvent = (AggregateInteractionEvent) event;
+		} else if (last == null) {
 			aggregateEvent = AggregateInteractionEvent.getAggregatedEvent(event, eventCountOnCreation);
 		} else {
+			assert (last instanceof AggregateInteractionEvent);
 			AggregateInteractionEvent aggregateLastEvent = (AggregateInteractionEvent) last;
 			aggregateEvent = AggregateInteractionEvent.appendOneEditEvent(aggregateLastEvent, event,
 					eventCountOnCreation, toNewDuration);

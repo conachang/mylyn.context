@@ -135,7 +135,7 @@ public class InteractionContext implements IInteractionContext {
 		}
 		DegreeOfInterest doi = (DegreeOfInterest) node.getInterest();
 		if (event.getKind() == Kind.EDIT) {
-			boolean toNewDuration = lastEditEvent == null
+			boolean toNewDuration = (lastEditEvent == null)
 					|| !lastEditEvent.getStructureHandle().equals(event.getStructureHandle());
 			doi.addEditEvent(event, toNewDuration);
 		} else {

@@ -55,8 +55,12 @@ public class AggregateInteractionEvent extends InteractionEvent {
 	private static List<Duration> getUpdatedDurationList(List<Duration> _durationList, InteractionEvent e,
 			boolean toNewDuration) {
 		if (_durationList == null) {
-			return null;
+			List<Duration> durationList = new ArrayList<Duration>();
+			Duration newDuration = new Duration(e.getDate(), e.getEndDate(), e.getDelta().equals(DELTA_UPDATED));
+			durationList.add(newDuration);
+			return durationList;
 		}
+
 		List<Duration> durationList = new ArrayList<Duration>(_durationList);
 		if (toNewDuration) {
 			Duration newDuration = new Duration(e.getDate(), e.getEndDate(), e.getDelta().equals(DELTA_UPDATED));
