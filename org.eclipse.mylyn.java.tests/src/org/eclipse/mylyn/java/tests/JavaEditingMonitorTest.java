@@ -45,6 +45,8 @@ public class JavaEditingMonitorTest extends AbstractJavaContextTest {
 
 	private int editingCount;
 
+	private boolean isLastModified;
+
 	private JavaEditingMonitor monitor;
 
 	private IPackageFragment pkg;
@@ -74,6 +76,7 @@ public class JavaEditingMonitorTest extends AbstractJavaContextTest {
 			public void interactionObserved(InteractionEvent event) {
 				if (event.getKind() == Kind.EDIT) {
 					editingCount++;
+					isLastModified = event.getDelta().equals("modified");
 				} else if (event.getKind() == Kind.SELECTION) {
 					selectingCount++;
 				}
@@ -129,12 +132,16 @@ public class JavaEditingMonitorTest extends AbstractJavaContextTest {
 
 		assertEquals(0, editingCount);
 		assertEquals(1, selectingCount);
+		assertFalse(isLastModified);
 
+		// insert "/**/" to callee().
+		callee = typeFoo.createMethod("void callee() { /**/}", null, true, null);
 		// select it again
 		monitor.handleWorkbenchPartSelection(editorPart, calleeSelection, false);
 
 		assertEquals(1, editingCount);
 		assertEquals(1, selectingCount);
+		assertTrue(isLastModified);
 	}
 
 	public void testHandleElementSelection() throws PartInitException, JavaModelException, InterruptedException {
@@ -159,7 +166,10 @@ public class JavaEditingMonitorTest extends AbstractJavaContextTest {
 
 		assertEquals(0, editingCount);
 		assertEquals(1, selectingCount);
+		assertFalse(isLastModified);
 
+		// insert "/**/" to caller
+		caller = typeFoo.createMethod("void caller() {  /**/}", null, true, null);
 		TextSelection callerSelection = new TextSelection(document, typeFoo.getCompilationUnit()
 				.getSource()
 				.indexOf("caller()"), "caller".length());
@@ -169,12 +179,16 @@ public class JavaEditingMonitorTest extends AbstractJavaContextTest {
 
 		assertEquals(0, editingCount);
 		assertEquals(2, selectingCount);
+		assertFalse(isLastModified);
 
+		// insert "caller" to caller
+		caller = typeFoo.createMethod("void caller() {  /*caller*/}", null, true, null);
 		// select a different element
 		monitor.handleWorkbenchPartSelection(editorPart, callerSelection, false);
 
 		assertEquals(1, editingCount);
 		assertEquals(2, selectingCount);
+		assertTrue(isLastModified);
 	}
 
 	public void testHandleElementSelection_e_4() throws PartInitException, JavaModelException, InterruptedException {
