@@ -146,7 +146,7 @@ public class AggregateInteractionEvent extends InteractionEvent {
 		if (xmlString == null || xmlString.charAt(0) != '[' || xmlString.charAt(xmlString.length() - 1) != ']') {
 			return null;
 		}
-		StringTokenizer tokenizer = new StringTokenizer(xmlString.substring(1, xmlString.length() - 2),
+		StringTokenizer tokenizer = new StringTokenizer(xmlString.substring(1, xmlString.length() - 1),
 				XMLSTRING_LIST_DELIMITER);
 		List<Duration> durationList = new ArrayList<Duration>();
 		try {
