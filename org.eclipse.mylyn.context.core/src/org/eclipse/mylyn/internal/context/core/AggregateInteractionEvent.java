@@ -69,7 +69,7 @@ public class AggregateInteractionEvent extends InteractionEvent {
 			durationList.add(newDuration);
 		} else {
 			Duration lastDuration = durationList.get(durationList.size() - 1);
-			Duration updatedDuration = new Duration(lastDuration.begin, e.getEndDate(), lastDuration.isModified
+			Duration updatedDuration = new Duration(lastDuration.getBegin(), e.getEndDate(), lastDuration.isModified()
 					|| e.getDelta().equals(DELTA_MODIFIED));
 			durationList.set(durationList.size() - 1, updatedDuration);
 		}
@@ -164,12 +164,12 @@ public class AggregateInteractionEvent extends InteractionEvent {
 
 	}
 
-	static class Duration {
-		final Date begin;
+	public static class Duration {
+		private final Date begin;
 
-		final Date end;
+		private final Date end;
 
-		final boolean isModified;
+		private final boolean isModified;
 
 		Duration(Date begin, Date end, boolean isModified) {
 			this.begin = begin;
@@ -188,6 +188,18 @@ public class AggregateInteractionEvent extends InteractionEvent {
 		public String toString() {
 			return dateFormat.format(begin) + XMLSTRING_DURATION_DELIMITER + dateFormat.format(end)
 					+ XMLSTRING_DURATION_DELIMITER + (isModified ? DELTA_MODIFIED : DELTA_REFERRED);
+		}
+
+		public Date getBegin() {
+			return begin;
+		}
+
+		public Date getEnd() {
+			return end;
+		}
+
+		public boolean isModified() {
+			return isModified;
 		}
 	}
 
