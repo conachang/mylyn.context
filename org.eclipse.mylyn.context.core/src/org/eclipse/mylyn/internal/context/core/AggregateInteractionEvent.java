@@ -56,13 +56,6 @@ public class AggregateInteractionEvent extends InteractionEvent {
 
 	private static List<Duration> getUpdatedDurationList(List<Duration> _durationList, InteractionEvent e,
 			boolean toNewDuration) {
-		if (_durationList == null) {
-			List<Duration> durationList = new ArrayList<Duration>();
-			Duration newDuration = new Duration(e.getDate(), e.getEndDate(), e.getDelta().equals(DELTA_MODIFIED));
-			durationList.add(newDuration);
-			return durationList;
-		}
-
 		List<Duration> durationList = new ArrayList<Duration>(_durationList);
 		if (toNewDuration) {
 			Duration newDuration = new Duration(e.getDate(), e.getEndDate(), e.getDelta().equals(DELTA_MODIFIED));
@@ -144,7 +137,7 @@ public class AggregateInteractionEvent extends InteractionEvent {
 
 	public static List<Duration> getListOfDurationFromXMLString(String xmlString) {
 		if (xmlString == null || xmlString.charAt(0) != '[' || xmlString.charAt(xmlString.length() - 1) != ']') {
-			return null;
+			return new ArrayList<Duration>();
 		}
 		StringTokenizer tokenizer = new StringTokenizer(xmlString.substring(1, xmlString.length() - 1),
 				XMLSTRING_LIST_DELIMITER);
