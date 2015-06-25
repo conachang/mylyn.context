@@ -164,7 +164,11 @@ public class AggregateInteractionEvent extends InteractionEvent {
 
 		private final boolean isModified;
 
-		Duration(Date begin, Date end, boolean isModified) {
+		//public for testing
+		public Duration(Date begin, Date end, boolean isModified) {
+			if (begin == null || end == null) {
+				throw new NullPointerException();
+			}
 			this.begin = begin;
 			this.end = end;
 			this.isModified = isModified;
@@ -193,6 +197,37 @@ public class AggregateInteractionEvent extends InteractionEvent {
 
 		public boolean isModified() {
 			return isModified;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + begin.hashCode();
+			result = prime * result + end.hashCode();
+			result = prime * result + (isModified ? 1231 : 1237);
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof Duration)) {
+				return false;
+			}
+			Duration other = (Duration) obj;
+			if (!begin.equals(other.begin)) {
+				return false;
+			}
+			if (!end.equals(other.end)) {
+				return false;
+			}
+			if (isModified != other.isModified) {
+				return false;
+			}
+			return true;
 		}
 	}
 

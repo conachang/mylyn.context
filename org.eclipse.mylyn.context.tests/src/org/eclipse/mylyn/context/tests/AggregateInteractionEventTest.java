@@ -15,8 +15,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import org.eclipse.mylyn.internal.context.core.AggregateInteractionEvent;
 import org.eclipse.mylyn.internal.context.core.AggregateInteractionEvent.Duration;
@@ -26,13 +31,19 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class AggregateInteractionEventTest {
+	TimeZone defaultTimeZone;
+
+	private static final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S z", Locale.ENGLISH);
 
 	@Before
 	public void setUp() throws Exception {
+		defaultTimeZone = TimeZone.getDefault();
+		TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
 	}
 
 	@After
 	public void tearDown() throws Exception {
+		TimeZone.setDefault(defaultTimeZone);
 	}
 
 	@Test
@@ -76,6 +87,24 @@ public class AggregateInteractionEventTest {
 
 		assertEquals(4, aie.getNumCollapsedEvents());
 
+		assertEquals(
+				"[2015-06-24 04:59:06.0 GMT/2015-06-24 04:59:11.0 GMT/modified, 2015-06-24 05:00:50.0 GMT/2015-06-24 05:00:51.0 GMT/referred]",
+				aie.getDurationListXMLString());
+
+	}
+
+	@Test
+	public void getListOfDurationFromXMLStringTest() throws ParseException {
+		String xmlString = "[2015-06-24 04:59:06.0 GMT/2015-06-24 04:59:11.0 GMT/modified, 2015-06-24 05:00:50.0 GMT/2015-06-24 05:00:51.0 GMT/referred]";
+		List<Duration> actualDurationList = AggregateInteractionEvent.getListOfDurationFromXMLString(xmlString);
+
+		List<Duration> expectedDurationList = new ArrayList<Duration>();
+		expectedDurationList.add(new Duration(dateFormat.parse("2015-06-24 04:59:06.0 GMT"),
+				dateFormat.parse("2015-06-24 04:59:11.0 GMT"), true));
+		expectedDurationList.add(new Duration(dateFormat.parse("2015-06-24 05:00:50.0 GMT"),
+				dateFormat.parse("2015-06-24 05:00:51.0 GMT"), false));
+
+		assertEquals(expectedDurationList, actualDurationList);
 	}
 
 	private InteractionEvent createMockEdit(long startTime, long endTime, boolean isModified) {
