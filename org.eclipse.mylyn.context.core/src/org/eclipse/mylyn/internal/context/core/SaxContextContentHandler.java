@@ -122,8 +122,11 @@ public class SaxContextContentHandler extends DefaultHandler {
 		Date dStartDate = dateFormat.parse(startDate);
 		Date dEndDate = dateFormat.parse(endDate);
 		float iInterest = Float.parseFloat(interest);
+		List<Duration> durationList = null;
 		String durationListString = attributes.getValue(InteractionContextExternalizer.ATR_DURATION_LIST);
-		List<Duration> durationList = AggregateInteractionEvent.getListOfDurationFromXMLString(durationListString);
+		if (durationListString != null) {
+			durationList = AggregateInteractionEvent.getListOfDurationFromXMLString(durationListString);
+		}
 
 		InteractionEvent ie = null;
 		if (numEventsString == null || eventCountOnCreationString == null) {

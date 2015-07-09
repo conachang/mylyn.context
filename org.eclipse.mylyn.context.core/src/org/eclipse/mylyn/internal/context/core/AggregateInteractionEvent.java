@@ -70,12 +70,12 @@ public class AggregateInteractionEvent extends InteractionEvent {
 	}
 
 	public static AggregateInteractionEvent appendOneEditEvent(AggregateInteractionEvent last, InteractionEvent event,
-			int eventCountOnCreation, boolean toNewDuration) {
+			boolean toNewDuration) {
 		List<Duration> newDuration = getUpdatedDurationList(last.getDurationList(), event, toNewDuration);
 		return new AggregateInteractionEvent(event.getKind(), event.getStructureKind(), event.getStructureHandle(),
 				event.getOriginId(), event.getNavigation(), "null", last.getInterestContribution() //$NON-NLS-1$
 				+ event.getInterestContribution(), last.getDate(), event.getEndDate(),
-				last.getNumCollapsedEvents() + 1, eventCountOnCreation, newDuration);
+				last.getNumCollapsedEvents() + 1, last.eventCountOnCreation, newDuration);
 	}
 
 	/**

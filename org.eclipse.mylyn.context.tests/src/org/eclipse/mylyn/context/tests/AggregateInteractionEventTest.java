@@ -57,21 +57,21 @@ public class AggregateInteractionEventTest {
 
 		//A modified event
 		InteractionEvent ie2 = createMockEdit(1435121948000L, 1435121949000L, true);
-		aie = AggregateInteractionEvent.appendOneEditEvent(aie, ie2, 0, false);
+		aie = AggregateInteractionEvent.appendOneEditEvent(aie, ie2, false);
 		assertEquals(1, aie.getDurationList().size());
 		assertTrue(aie.getDurationList().get(0).isModified());
 		assertEquals(2, aie.getNumCollapsedEvents());
 
 		//A referred event again
 		InteractionEvent ie3 = createMockEdit(1435121950000L, 1435121951000L, false);
-		aie = AggregateInteractionEvent.appendOneEditEvent(aie, ie3, 0, false);
+		aie = AggregateInteractionEvent.appendOneEditEvent(aie, ie3, false);
 		assertEquals(1, aie.getDurationList().size());
 		assertTrue(aie.getDurationList().get(0).isModified());
 		assertEquals(3, aie.getNumCollapsedEvents());
 
 		//A referred event to new duration.
 		InteractionEvent ie4 = createMockEdit(1435122050000L, 1435122051000L, false);
-		aie = AggregateInteractionEvent.appendOneEditEvent(aie, ie4, 0, true);
+		aie = AggregateInteractionEvent.appendOneEditEvent(aie, ie4, true);
 		assertEquals(2, aie.getDurationList().size());
 		List<Duration> durationList = aie.getDurationList();
 
@@ -110,7 +110,7 @@ public class AggregateInteractionEventTest {
 	private InteractionEvent createMockEdit(long startTime, long endTime, boolean isModified) {
 		return new InteractionEvent(InteractionEvent.Kind.EDIT, "kind", "handle", "source-id", "id", isModified
 				? AggregateInteractionEvent.DELTA_MODIFIED
-						: AggregateInteractionEvent.DELTA_REFERRED, 1, new Date(startTime), new Date(endTime));
+				: AggregateInteractionEvent.DELTA_REFERRED, 1, new Date(startTime), new Date(endTime));
 
 	}
 

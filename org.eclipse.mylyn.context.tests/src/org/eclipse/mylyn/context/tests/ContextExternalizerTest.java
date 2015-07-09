@@ -19,6 +19,11 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -32,13 +37,17 @@ import org.eclipse.mylyn.context.core.IInteractionElement;
 import org.eclipse.mylyn.context.core.IInteractionRelation;
 import org.eclipse.mylyn.context.tests.support.DomContextReader;
 import org.eclipse.mylyn.context.tests.support.DomContextWriter;
+import org.eclipse.mylyn.internal.context.core.AggregateInteractionEvent;
+import org.eclipse.mylyn.internal.context.core.AggregateInteractionEvent.Duration;
 import org.eclipse.mylyn.internal.context.core.ContextCorePlugin;
+import org.eclipse.mylyn.internal.context.core.DegreeOfInterest;
 import org.eclipse.mylyn.internal.context.core.InteractionContext;
 import org.eclipse.mylyn.internal.context.core.InteractionContextExternalizer;
 import org.eclipse.mylyn.internal.context.core.InteractionContextManager;
 import org.eclipse.mylyn.internal.context.core.SaxContextReader;
 import org.eclipse.mylyn.internal.context.core.SaxContextWriter;
 import org.eclipse.mylyn.monitor.core.InteractionEvent;
+import org.eclipse.mylyn.monitor.core.InteractionEvent.Kind;
 
 /**
  * @author Mik Kersten
@@ -55,6 +64,8 @@ public class ContextExternalizerTest extends AbstractContextTest {
 	private File contextFile;
 
 	private AbstractContextContributor contributor;
+
+	private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.S z", Locale.ENGLISH);
 
 	@Override
 	protected void setUp() throws Exception {
@@ -112,6 +123,36 @@ public class ContextExternalizerTest extends AbstractContextTest {
 				new SaxContextReader(), scaling);
 
 		assertEquals(domReadAfterWrite, saxReadAfterWrite);
+	}
+
+	public void testSaxExternalizationWithDuration() throws Exception {
+		File file = CommonTestUtil.getFile(this, "testdata/externalizer/testcontext-withduration.xml.zip");
+		assertTrue(file.getAbsolutePath(), file.exists());
+		InteractionContextExternalizer externalizer = new InteractionContextExternalizer();
+		IInteractionContext domReadContext = externalizer.readContextFromXml(CONTEXT_HANDLE, file,
+				new DomContextReader(), scaling);
+
+		IInteractionContext saxReadContext = externalizer.readContextFromXml(CONTEXT_HANDLE, file,
+				new SaxContextReader(), scaling);
+		assertEquals(114, saxReadContext.getInteractionHistory().size()); // known from testdata
+		assertEquals(domReadContext, saxReadContext);
+
+		File domOut = new File("dom-out.xml");
+		domOut.deleteOnExit();
+		externalizer.writeContextToXml(saxReadContext, domOut, new DomContextWriter());
+
+		File saxOut = new File("sax-out.xml");
+		saxOut.deleteOnExit();
+		externalizer.writeContextToXml(domReadContext, saxOut, new SaxContextWriter());
+
+		IInteractionContext domReadAfterWrite = externalizer.readContextFromXml(CONTEXT_HANDLE, saxOut,
+				new DomContextReader(), scaling);
+		IInteractionContext saxReadAfterWrite = externalizer.readContextFromXml(CONTEXT_HANDLE, domOut,
+				new SaxContextReader(), scaling);
+
+		assertEquals(domReadAfterWrite, saxReadAfterWrite);
+		assertEquals(saxReadContext, saxReadAfterWrite);
+
 	}
 
 	public void testContextSize() throws Exception {
@@ -176,7 +217,7 @@ public class ContextExternalizerTest extends AbstractContextTest {
 
 	/**
 	 * What is written and read from disk should always return the same doi for an element when the context is collapsed
-	 * 
+	 *
 	 * @throws Exception
 	 */
 	public void testExternalizationWithCollapse() throws Exception {
@@ -350,5 +391,48 @@ public class ContextExternalizerTest extends AbstractContextTest {
 		resultStream = ContextCore.getContextManager().getAdditionalContextData(context, testContributorId);
 		assertNotNull(resultStream);
 		assertNull(externalizer.getAdditionalInformation(contextFile, "nonExistingContributor"));
+	}
+
+	public void testDurationList() throws Exception {
+		context.reset();
+		Date startDate1 = dateFormat.parse("2015-06-24 04:59:11.0 GMT");
+		Date endDate1 = dateFormat.parse("2015-06-24 05:01:15.0 GMT");
+		Date startDate2 = dateFormat.parse("2015-06-24 05:01:16.0 GMT");
+		Date endDate2 = dateFormat.parse("2015-06-24 05:03:10.0 GMT");
+		Date startDate3 = dateFormat.parse("2015-06-24 05:03:50.0 GMT");
+		Date endDate3 = dateFormat.parse("2015-06-24 05:05:10.0 GMT");
+		Duration duration1 = new Duration(startDate1, endDate1, false);
+		Duration duration2 = new Duration(startDate2, endDate2, true);
+		Duration duration3 = new Duration(startDate3, endDate3, false);
+		List<Duration> durationList1 = new ArrayList<Duration>();
+		durationList1.add(duration1);
+		durationList1.add(duration2);
+		List<Duration> durationList2 = new ArrayList<Duration>();
+		durationList2.add(duration3);
+		AggregateInteractionEvent e1 = new AggregateInteractionEvent(Kind.EDIT, "", "one", "", "", "", 0, startDate1,
+				endDate2, 2, 1, durationList1);
+		AggregateInteractionEvent e2 = new AggregateInteractionEvent(Kind.EDIT, "", "two", "", "", "", 0, startDate3,
+				endDate3, 2, 1, durationList2);
+		context.parseEvent(e1);
+		context.parseEvent(e2);
+
+		File file = new File("out.xml");
+		file.deleteOnExit();
+		InteractionContextExternalizer externalizer = new InteractionContextExternalizer();
+		externalizer.writeContextToXml(context, file);
+		IInteractionContext contextAfterRead = externalizer.readContextFromXml(CONTEXT_HANDLE, file, scaling);
+
+		IInteractionElement elementOne = contextAfterRead.get("one");
+		List<InteractionEvent> eventAfterReadOne = ((DegreeOfInterest) elementOne.getInterest()).getCollapsedEvents();
+		assertEquals(1, eventAfterReadOne.size()); //Only have an EDIT event
+		List<Duration> durationList1AfterRead = ((AggregateInteractionEvent) eventAfterReadOne.get(0)).getDurationList();
+		assertEquals(durationList1, durationList1AfterRead);
+
+		IInteractionElement elementTwo = contextAfterRead.get("two");
+		List<InteractionEvent> eventAfterReadTwo = ((DegreeOfInterest) elementTwo.getInterest()).getCollapsedEvents();
+		assertEquals(1, eventAfterReadTwo.size()); //Only have an EDIT event
+		List<Duration> durationList2AfterRead = ((AggregateInteractionEvent) eventAfterReadTwo.get(0)).getDurationList();
+		assertEquals(durationList2, durationList2AfterRead);
+
 	}
 }

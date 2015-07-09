@@ -17,6 +17,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.zip.ZipInputStream;
 
@@ -25,8 +26,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.eclipse.mylyn.context.core.ContextCore;
 import org.eclipse.mylyn.internal.context.core.AggregateInteractionEvent;
+import org.eclipse.mylyn.internal.context.core.AggregateInteractionEvent.Duration;
 import org.eclipse.mylyn.internal.context.core.IInteractionContextReader;
 import org.eclipse.mylyn.internal.context.core.InteractionContext;
+import org.eclipse.mylyn.internal.context.core.InteractionContextExternalizer;
 import org.eclipse.mylyn.monitor.core.InteractionEvent;
 import org.eclipse.mylyn.monitor.core.InteractionEvent.Kind;
 import org.w3c.dom.Document;
@@ -118,6 +121,12 @@ public class DomContextReader implements IInteractionContextReader {
 				}
 			}
 
+			List<Duration> durationList = null;
+			String durationListString = e.getAttribute(InteractionContextExternalizer.ATR_DURATION_LIST);
+			if (durationListString != null && durationListString.length() != 0) {
+				durationList = AggregateInteractionEvent.getListOfDurationFromXMLString(durationListString);
+			}
+
 			String formatString = "yyyy-MM-dd HH:mm:ss.S z";
 			SimpleDateFormat format = new SimpleDateFormat(formatString, Locale.ENGLISH);
 
@@ -126,10 +135,15 @@ public class DomContextReader implements IInteractionContextReader {
 				// if we don't have the values for the collapsed event, it must be one that is uncollapsed
 				ie = new InteractionEvent(Kind.fromString(kind), structureKind, structureHandle, originId, navigation,
 						delta, Float.parseFloat(interest), format.parse(startDate), format.parse(endDate));
-			} else {
+			} else if (durationList == null) {
 				ie = new AggregateInteractionEvent(Kind.fromString(kind), structureKind, structureHandle, originId,
 						navigation, delta, Float.parseFloat(interest), format.parse(startDate), format.parse(endDate),
 						numEvents, eventCountOnCreation);
+			} else {
+				ie = new AggregateInteractionEvent(Kind.fromString(kind), structureKind, structureHandle, originId,
+						navigation, delta, Float.parseFloat(interest), format.parse(startDate), format.parse(endDate),
+						numEvents, eventCountOnCreation, durationList);
+
 			}
 
 			return ie;
